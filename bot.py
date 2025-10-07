@@ -1,8 +1,8 @@
 import os
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import requests
 from bs4 import BeautifulSoup
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -28,12 +28,12 @@ def search_vegamovies(movie_name):
         return first_movie['href']
     return None
 
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "Hello! मुझे Vegamovies का movie name या link भेजो, मैं video link fetch कर दूँगा।"
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "👋 Hello! मुझे Vegamovies का movie name या link भेजो, मैं video link fetch कर दूँगा।"
     )
 
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
 
     if user_input.startswith("http"):
@@ -41,22 +41,23 @@ def handle_message(update: Update, context: CallbackContext):
     else:
         url = search_vegamovies(user_input)
 
+    if not url:
+        await update.message.reply_text("❌ मुझे movie नहीं मिली।")
+        return
+
     download_link = get_download_link(url)
 
     if download_link:
-        update.message.reply_text(f"✅ Video Download Link:\n{download_link}")
+        await update.message.reply_text(f"✅ Video Download Link:\n{download_link}")
     else:
-        update.message.reply_text("❌ मुझे download link नहीं मिला। कृपया सही लिंक भेजें।")
+        await update.message.reply_text("❌ मुझे download link नहीं मिला। कृपया सही लिंक भेजें।")
 
 def main():
-    updater = Updater(BOT_TOKEN)
-    dispatcher = updater.dispatcher
-
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-
-    updater.start_polling()
-    updater.idle()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    print("Bot is running...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
