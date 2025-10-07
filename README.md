@@ -1,18 +1,18 @@
-# 🎬 Vegamovies Telegram Bot
+# OMYA GAMING BOT
 
-A simple Telegram bot that helps you find and fetch movie download links from **Vegamovies** automatically.
+A Telegram bot for delivering gaming content after UPI payment.
 
----
+## Setup
 
-## 🚀 Features
-- Search movies by name  
-- Fetch direct download links  
-- Fast and simple Telegram integration  
-- Deployable 24x7 on Render  
+1. Clone this repo
+2. Run `npm install`
+3. Create `.env` file from `.env.example`
+4. Run `npm start`
 
----
+## Commands
 
-## 🛠️ Requirements
-
-Create a file named `requirements.txt` with the following:
-
+- `/start` – Welcome message
+- `/plans` – Subscription plans
+- `/pay` – UPI payment info
+- `/community` – Join groups
+- `/content` – Deliver content (admin only)
