@@ -12,6 +12,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 ARCHIVE_ACCESS_KEY = "I5K6xwIfiAKWRAJb"
 ARCHIVE_SECRET_KEY = "UbmsVuLSrIYFbVFo"
 BOT_TOKEN = "8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0"
+UPLOAD_ENDPOINT = "https://terabox-archive.onrender.com/upload"  # 🔁 Replace with your actual Render URL
 
 app = Flask(__name__)
 
@@ -59,7 +60,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
     try:
-        res = requests.post("http://localhost:10000/upload", json=payload)
+        res = requests.post(UPLOAD_ENDPOINT, json=payload)
         data = res.json()
         if "link" in data:
             await update.message.reply_text(f"✅ Done! Archive link:\n{data['link']}")
