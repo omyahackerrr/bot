@@ -8,7 +8,7 @@ load_dotenv()
 
 ARCHIVE_ACCESS_KEY = os.getenv("ARCHIVE_ACCESS_KEY")
 ARCHIVE_SECRET_KEY = os.getenv("ARCHIVE_SECRET_KEY")
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.getenv("8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0")
 UPLOAD_ENDPOINT = os.getenv("UPLOAD_ENDPOINT")
 
 app = Flask(__name__)
