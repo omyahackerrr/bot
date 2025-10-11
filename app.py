@@ -12,7 +12,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 ARCHIVE_ACCESS_KEY = "I5K6xwIfiAKWRAJb"
 ARCHIVE_SECRET_KEY = "UbmsVuLSrIYFbVFo"
 BOT_TOKEN = "8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0"
-UPLOAD_ENDPOINT = "https://terabox-archive.onrender.com/upload"  # 🔁 Replace with your actual Render URL
+
+# Replace with your actual Render URL after deploy
+UPLOAD_ENDPOINT = "https://terabox-archive.onrender.com/upload"
 
 app = Flask(__name__)
 
