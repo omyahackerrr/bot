@@ -1,18 +1,21 @@
-# OMYA GAMING BOT
+# TeraBox to Archive.org Uploader
 
-A Telegram bot for delivering gaming content after UPI payment.
+## 🔧 Setup
 
-## Setup
+1. Create a new Web Service on [Render](https://render.com)
+2. Upload all files or connect GitHub
+3. Set these environment variables:
+   - ARCHIVE_ACCESS_KEY = I5K6xwIfiAKWRAJb
+   - ARCHIVE_SECRET_KEY = UbmsVuLSrIYFbVFo
+   - TELEGRAM_BOT_TOKEN = 8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0
+4. Deploy and go live
 
-1. Clone this repo
-2. Run `npm install`
-3. Create `.env` file from `.env.example`
-4. Run `npm start`
+## 📲 Telegram Bot
 
-## Commands
+- Send TeraBox link to bot
+- Bot replies with upload progress and final Archive.org link
 
-- `/start` – Welcome message
-- `/plans` – Subscription plans
-- `/pay` – UPI payment info
-- `/community` – Join groups
-- `/content` – Deliver content (admin only)
+## 🔗 Archive.org
+
+- Videos are uploaded using S3-compatible API
+- Final link format: https://archive.org/details/{item_name}
