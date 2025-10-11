@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-import requests, boto3, os, asyncio
+from flask import Flask, request
+import requests, boto3, os, asyncio, threading
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ def home():
     return "Bot is running!"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Send me a video file to upload to Archive.org.")
+    await update.message.reply_text("📥 Send me a video file to upload to Archive.org.")
 
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -30,7 +30,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Failed to download video.")
             return
 
-        item_name = "upload_" + str(update.effective_user.id) + "_" + str(update.message.message_id)
+        item_name = f"upload_{update.effective_user.id}_{update.message.message_id}"
 
         s3 = boto3.resource(
             's3',
@@ -52,9 +52,12 @@ async def run_bot():
     bot.add_handler(MessageHandler(filters.VIDEO, handle_video))
     await bot.run_polling()
 
-async def main():
-    asyncio.create_task(run_bot())
+def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
+
+async def main():
+    threading.Thread(target=run_flask).start()
+    await run_bot()
 
 if __name__ == '__main__':
     asyncio.run(main())
