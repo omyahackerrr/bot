@@ -4,20 +4,26 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 
+# Read secrets from environment
 ARCHIVE_ACCESS_KEY = os.getenv("ARCHIVE_ACCESS_KEY")
 ARCHIVE_SECRET_KEY = os.getenv("ARCHIVE_SECRET_KEY")
-BOT_TOKEN = os.getenv("8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 UPLOAD_ENDPOINT = os.getenv("UPLOAD_ENDPOINT")
 
+# Initialize Flask app
 app = Flask(__name__)
 
+# === Flask route for Archive upload ===
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
         terabox_url = request.json.get('url')
         item_name = request.json.get('item_name', 'upload_' + str(int(time.time())))
+
+        # Simulated direct video URL (replace with real extractor if needed)
         direct_url = terabox_url.replace("teraboxlink.com", "teraboxcdn.com") + "/video.mp4"
 
         response = requests.get(direct_url, stream=True)
@@ -38,13 +44,19 @@ def upload():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# === Telegram bot handlers ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Send me a TeraBox link to upload to Archive.org.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     link = update.message.text.strip()
     await update.message.reply_text("⏳ Upload started…")
-    payload = {"url": link, "item_name": "upload_" + str(update.effective_user.id)}
+
+    payload = {
+        "url": link,
+        "item_name": "upload_" + str(update.effective_user.id)
+    }
+
     try:
         res = requests.post(UPLOAD_ENDPOINT, json=payload)
         data = res.json()
@@ -57,12 +69,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
 
+# === Run Telegram bot in background ===
 def run_bot():
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
     bot.add_handler(CommandHandler("start", start))
     bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     bot.run_polling()
 
+# === Start both Flask and bot ===
 if __name__ == '__main__':
     threading.Thread(target=run_bot).start()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
