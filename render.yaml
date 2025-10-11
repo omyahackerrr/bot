@@ -3,4 +3,6 @@ services:
     name: terabox-archive-uploader
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python bot.py
+    startCommand: python app.py
+    envVars:
+      - fromDotEnv: true
