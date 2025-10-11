@@ -1,5 +1,5 @@
-from flask import Flask, request
-import requests, boto3, os, asyncio, threading
+from flask import Flask
+import requests, boto3, os, threading
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
@@ -46,18 +46,15 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {str(e)}")
 
-async def run_bot():
-    bot = ApplicationBuilder().token(BOT_TOKEN).build()
-    bot.add_handler(CommandHandler("start", start))
-    bot.add_handler(MessageHandler(filters.VIDEO, handle_video))
-    await bot.run_polling()
-
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
 
-async def main():
-    threading.Thread(target=run_flask).start()
-    await run_bot()
+def run_bot():
+    bot = ApplicationBuilder().token(BOT_TOKEN).build()
+    bot.add_handler(CommandHandler("start", start))
+    bot.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    bot.run_polling(allowed_updates=Update.ALL_TYPES, poll_interval=1.0, close_loop=False)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    threading.Thread(target=run_flask).start()
+    run_bot()
