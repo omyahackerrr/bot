@@ -1,34 +1,36 @@
 from flask import Flask, request, jsonify
-import requests, boto3, os, threading, time
+import requests, boto3, os, asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Read secrets from environment
 ARCHIVE_ACCESS_KEY = os.getenv("ARCHIVE_ACCESS_KEY")
 ARCHIVE_SECRET_KEY = os.getenv("ARCHIVE_SECRET_KEY")
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-UPLOAD_ENDPOINT = os.getenv("UPLOAD_ENDPOINT")
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# === Flask route for Archive upload ===
-@app.route('/upload', methods=['POST'])
-def upload():
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Send me a video file to upload to Archive.org.")
+
+async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        terabox_url = request.json.get('url')
-        item_name = request.json.get('item_name', 'upload_' + str(int(time.time())))
+        file_id = update.message.video.file_id
+        file = await context.bot.get_file(file_id)
+        file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file.file_path}"
 
-        # Simulated direct video URL (replace with real extractor if needed)
-        direct_url = terabox_url.replace("teraboxlink.com", "teraboxcdn.com") + "/video.mp4"
-
-        response = requests.get(direct_url, stream=True)
+        response = requests.get(file_url, stream=True)
         if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch video'}), 400
+            await update.message.reply_text("❌ Failed to download video.")
+            return
+
+        item_name = "upload_" + str(update.effective_user.id) + "_" + str(update.message.message_id)
 
         s3 = boto3.resource(
             's3',
@@ -40,43 +42,19 @@ def upload():
         bucket.upload_fileobj(response.raw, 'video.mp4')
 
         archive_link = f"https://archive.org/details/{item_name}"
-        return jsonify({'status': 'Upload complete', 'link': archive_link})
+        await update.message.reply_text(f"✅ Uploaded!\n{archive_link}")
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
-# === Telegram bot handlers ===
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Send me a TeraBox link to upload to Archive.org.")
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    link = update.message.text.strip()
-    await update.message.reply_text("⏳ Upload started…")
-
-    payload = {
-        "url": link,
-        "item_name": "upload_" + str(update.effective_user.id)
-    }
-
-    try:
-        res = requests.post(UPLOAD_ENDPOINT, json=payload)
-        data = res.json()
-        if "link" in data:
-            await update.message.reply_text(f"✅ Done! Archive link:\n{data['link']}")
-        elif "error" in data:
-            await update.message.reply_text(f"❌ Upload failed: {data['error']}")
-        else:
-            await update.message.reply_text("❌ Unknown error occurred.")
-    except Exception as e:
-        await update.message.reply_text(f"Error: {str(e)}")
-
-# === Run Telegram bot in background ===
-def run_bot():
+async def run_bot():
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
     bot.add_handler(CommandHandler("start", start))
-    bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    bot.run_polling()
+    bot.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    await bot.run_polling()
 
-# === Start both Flask and bot ===
-if __name__ == '__main__':
-    threading.Thread(target=run_bot).start()
+async def main():
+    asyncio.create_task(run_bot())
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
+
+if __name__ == '__main__':
+    asyncio.run(main())
