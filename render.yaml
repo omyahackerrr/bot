@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: terabox-archive-uploader
+    name: telegram-video-uploader
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
