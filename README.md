@@ -1,21 +1,20 @@
-# TeraBox to Archive.org Uploader
+# TeraBox to Archive.org Uploader Bot
+
+## 🚀 Features
+- Telegram bot accepts TeraBox links
+- Uploads video to Archive.org via S3 API
+- Returns public archive link
 
 ## 🔧 Setup
+1. Clone repo or upload files to Render
+2. Add `.env` with your keys
+3. Deploy as Web Service
+4. Bot goes live and responds to links
 
-1. Create a new Web Service on [Render](https://render.com)
-2. Upload all files or connect GitHub
-3. Set these environment variables:
-   - ARCHIVE_ACCESS_KEY = I5K6xwIfiAKWRAJb
-   - ARCHIVE_SECRET_KEY = UbmsVuLSrIYFbVFo
-   - TELEGRAM_BOT_TOKEN = 8116523674:AAFVBBfcPvvpYjp0d6OkSpU1cxW1fllECO0
-4. Deploy and go live
+## 📦 Environment Variables
+See `.env.example` for required keys.
 
-## 📲 Telegram Bot
-
-- Send TeraBox link to bot
-- Bot replies with upload progress and final Archive.org link
-
-## 🔗 Archive.org
-
-- Videos are uploaded using S3-compatible API
-- Final link format: https://archive.org/details/{item_name}
+## 📲 Telegram Flow
+- User sends TeraBox link
+- Bot replies with upload progress
+- Final Archive.org link returned
