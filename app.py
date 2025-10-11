@@ -18,29 +18,32 @@ app = Flask(__name__)
 # === FLASK ROUTE ===
 @app.route('/upload', methods=['POST'])
 def upload():
-    terabox_url = request.json.get('url')
-    item_name = request.json.get('item_name', 'upload_' + str(int(time.time())))
+    try:
+        terabox_url = request.json.get('url')
+        item_name = request.json.get('item_name', 'upload_' + str(int(time.time())))
 
-    # Simulated direct video URL (replace with real extractor)
-    direct_url = terabox_url.replace("teraboxlink.com", "teraboxcdn.com") + "/video.mp4"
+        # Simulated direct video URL (replace with real extractor)
+        direct_url = terabox_url.replace("teraboxlink.com", "teraboxcdn.com") + "/video.mp4"
 
-    response = requests.get(direct_url, stream=True)
-    if response.status_code != 200:
-        return jsonify({'error': 'Failed to fetch video'}), 400
+        response = requests.get(direct_url, stream=True)
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch video'}), 400
 
-    s3 = boto3.resource(
-        's3',
-        endpoint_url='https://s3.us.archive.org',
-        aws_access_key_id=ARCHIVE_ACCESS_KEY,
-        aws_secret_access_key=ARCHIVE_SECRET_KEY
-    )
+        s3 = boto3.resource(
+            's3',
+            endpoint_url='https://s3.us.archive.org',
+            aws_access_key_id=ARCHIVE_ACCESS_KEY,
+            aws_secret_access_key=ARCHIVE_SECRET_KEY
+        )
 
-    bucket = s3.Bucket(item_name)
-    bucket.upload_fileobj(response.raw, 'video.mp4')
+        bucket = s3.Bucket(item_name)
+        bucket.upload_fileobj(response.raw, 'video.mp4')
 
-    archive_link = f"https://archive.org/details/{item_name}"
-    return jsonify({'status': 'Upload complete', 'link': archive_link})
+        archive_link = f"https://archive.org/details/{item_name}"
+        return jsonify({'status': 'Upload complete', 'link': archive_link})
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # === TELEGRAM BOT ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -60,18 +63,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = res.json()
         if "link" in data:
             await update.message.reply_text(f"✅ Done! Archive link:\n{data['link']}")
+        elif "error" in data:
+            await update.message.reply_text(f"❌ Upload failed: {data['error']}")
         else:
-            await update.message.reply_text("❌ Upload failed.")
+            await update.message.reply_text("❌ Unknown error occurred.")
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
-
 
 def run_bot():
     app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app_bot.run_polling()
-
 
 # === MAIN ===
 if __name__ == '__main__':
