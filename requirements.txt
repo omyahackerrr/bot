@@ -2,3 +2,5 @@ python-telegram-bot==13.15
 Flask==2.3.2
 requests==2.31.0
 python-dotenv==1.0.0
+boto3==1.28.57
+
