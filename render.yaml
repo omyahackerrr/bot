@@ -1,8 +1,25 @@
 services:
   - type: web
-    name: telegram-video-uploader
+    name: group-access-backend
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    buildCommand: ""
+    startCommand: "python backend/server.py"
+    repo: https://github.com/yourusername/group-access-bot
+    plan: free
     envVars:
-      - fromDotEnv: true
+      - key: BOT_TOKEN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  - type: web
+    name: group-access-frontend
+    env: static
+    buildCommand: ""
+    staticPublishPath: frontend
+    repo: https://github.com/yourusername/group-access-bot
+    plan: free
